@@ -6,7 +6,7 @@
 /*   By: lvasseur <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/11/22 13:03:07 by lvasseur          #+#    #+#             */
-/*   Updated: 2019/11/22 13:36:32 by lvasseur         ###   ########.fr       */
+/*   Updated: 2019/11/22 14:43:01 by lvasseur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,5 +15,6 @@
 
 # include <stdlib.h>
 # include "libft.h"
+# include "math.h"
 
 #endif
