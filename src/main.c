@@ -6,7 +6,7 @@
 /*   By: lvasseur <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/11/22 13:02:31 by lvasseur          #+#    #+#             */
-/*   Updated: 2019/11/22 15:04:34 by lvasseur         ###   ########.fr       */
+/*   Updated: 2019/11/22 16:29:50 by lvasseur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,15 +84,20 @@ int		*set_r()
 	return (r);
 }
 
+char	*big_str(char *str)
+{
+	
+}
+
 int		md5(char *str)
 {
-	int		*r;
-	int		*k;
-	int		i;
-	int		h0;
-	int		h1;
-	int		h2;
-	int		h3;
+	int			*r;
+	int			*k;
+	int			i;
+	int			h0;
+	int			h1;
+	int			h2;
+	int			h3;
 
 	r = set_r();
 	k = (int*)malloc(sizeof(int) * 64);
@@ -106,7 +111,7 @@ int		md5(char *str)
 	h1 = 0xEFCDAB89;
 	h2 = 0x98BADCFE;
 	h3 = 0x10325476;
-	str += 0x00000001;
+	str = big_str(str);
 	return (0);
 }
 
