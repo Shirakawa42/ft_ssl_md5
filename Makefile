@@ -30,12 +30,12 @@ all: $(NAME)
 
 $(NAME): $(OBJ)
 	@make -C libft/
-	@$(CC) $(GCC_FLGS) $(INC) $(OBJ) libft/libft.a -o $(NAME)
+	@$(CC) $(GCC_FLGS) $(INC) $(OBJ) libft/libft.a -lm -o $(NAME)
 	@echo "$(NAME) created"
 
 $(OBJ_PATH)%.o: $(SRC_PATH)%.c
 	@mkdir -p $(OBJ_PATH)
-	@$(CC) $(GCC_FLGS) $(INC) -o $@ -c $<
+	@$(CC) $(GCC_FLGS) $(INC) -o $@ -c $< -lm
 
 clean:
 	@make clean -C libft/
