@@ -35,67 +35,111 @@ const uint32_t g_k[] = {
 	0x6fa87e4f, 0xfe2ce6e0, 0xa3014314, 0x4e0811a1,
 	0xf7537e82, 0xbd3af235, 0x2ad7d2bb, 0xeb86d391};
 
-char		*string_to_bits(char *str)
+uint32_t	leftrotate(uint32_t x, uint32_t c)
 {
-	size_t	len;
-	char	*ret;
-	int	i;
-	int	j;
-	char	ch;
-	
-	len = ft_strlen(str);
-	ret = (char*)malloc(sizeof(char) * (len * 8 + 1));
-	ret[0] = '\0';
-	i = 0;
-	while (i < len)
-	{
-		j = 7;
-		ch = str[i];
-		while (j >= 0)
-		{
-			if (ch & (1 << j))
-				ft_strcat(ret, "1");
-			else
-				ft_strcat(ret, "0");
-			j--;
-		}
-		i++;
-	}
-	return (ret);
+	return (((x) << (c)) | ((x) >> (32 - (c))));
 }
 
-char		*addchar_to_str(char *str, char c)
+void	to_bytes(uint32_t val, uint8_t *bytes)
 {
-	size_t	len;
-
-	len = ft_strlen(str);
-	str = (char*)realloc(str, sizeof(char) * (len + 2));
-	str[len] = c;
-	str[len + 1] = '\0';
-	return (str);
+	bytes[0] = (uint8_t) val;
+	bytes[1] = (uint8_t) (val >> 8);
+	bytes[2] = (uint8_t) (val >> 16);
+	bytes[3] = (uint8_t) (val >> 24);
 }
 
-int		md5(char *str)
+uint32_t	to_int32(const uint8_t *bytes)
 {
-	int			i;
+	return ((uint32_t) bytes[0]
+        	| ((uint32_t) bytes[1] << 8)
+        	| ((uint32_t) bytes[2] << 16)
+        	| ((uint32_t) bytes[3] << 24));
+}
+
+void	md5(const uint8_t *msg, const size_t len, uint8_t *res)
+{
 	int			h0;
 	int			h1;
 	int			h2;
 	int			h3;
-	char			*bitmsg;
-	int			originalbitlengh;
+	uint8_t			*new_msg;
+	size_t			new_len;
+	size_t			offset;
+	uint32_t		w[16];
+	uint32_t		a, b, c, d, i, f, g, tmp;
 
 	h0 = 0x67452301;
 	h1 = 0xEFCDAB89;
 	h2 = 0x98BADCFE;
 	h3 = 0x10325476;
-	bitmsg = string_to_bits(str);
-	originalbitlength = ft_strlen(bitmsg);
-	bitmsg = addchar_to_str(bitmsg, '1');
-	while (ft_strlen(bitmsg) % 512 != 448)
-		bitmsg = addchar_to_str(bitmsg, '0');
-	ft_putendl(bitmsg);
-	return (0);
+	new_len = len + 1;
+	while (new_len % (512/8) != 448/8)
+		new_len++;
+	new_msg = (uint8_t*)malloc(sizeof(uint8_t) * (new_len + 8));
+	ft_memcpy(new_msg, msg, len);
+	new_msg[len] = 0x80;
+	offset = len + 1;
+	while (offset < new_len)
+	{
+		new_msg[offset] = 0;
+		offset++;
+	}
+	to_bytes(len * 8, new_msg + new_len);
+	to_bytes((len * 8) >> 32, new_msg + new_len + 4);
+	offset = 0;
+	while (offset < new_len)
+	{
+		i = 0;
+		while (i < 16)
+		{
+			w[i] = to_int32(new_msg + offset + i * 4);
+			i++;
+		}
+		a = h0;
+		b = h1;
+		c = h2;
+		d = h3;
+		i = 0;
+		while (i < 64)
+		{
+			if (i < 16)
+			{
+				f = (b & c) | ((-b) & d);
+				g = i;
+			}
+			else if (i < 32)
+			{
+				f = (d & b) | ((-d) & c);
+				g = (5*i + 1) % 16;
+			}
+			else if (i < 48)
+			{
+				f = b ^ c ^ d;
+				g = (3 * i + 5) % 16;
+			}
+			else
+			{
+				f = c ^ (b | (-d));
+				g = (7 * i) % 16;
+			}
+			tmp = d;
+			d = c;
+			c = b;
+			b = b + leftrotate((a + f + g_k[i] + w[g]), g_r[i]);
+			a = tmp;
+			i++;
+		}
+		h0 += a;
+		h1 += b;
+		h2 += c;
+		h3 += d;
+		offset += (512 / 8);
+	}
+	free(new_msg);
+	to_bytes(h0, res);
+	to_bytes(h1, res + 4);
+	to_bytes(h2, res + 8);
+	to_bytes(h3, res + 12);
 }
 
 int		sha256(char *str)
@@ -103,15 +147,40 @@ int		sha256(char *str)
 	return (0);
 }
 
+char		*getstr_from_res(uint8_t *res)
+{
+	char	*ret;
+	int	i;
+
+	ret = (char*)malloc(sizeof(char) * 33);
+	ret[32] = 0;
+	i = 0;
+	while (i < 16)
+	{
+		ret[i * 2] = "0123456789abcdef"[res[i] / 16];
+		ret[i * 2 + 1] = "0123456789abcdef"[res[i] % 16];
+		i++;
+	}
+	return (ret);
+}
+
 int		main(int ac, char **av)
 {
+	uint8_t	res[16];
+	char	*printable;
+
 	if (ac != 3)
 	{
 		ft_putendl("usage: ft_ssl command [command opts] [command args]");
 		return (0);
 	}
 	if (ft_strcmp(av[1], "md5") == 0)
-		return (md5(av[2]));
+	{
+		md5((uint8_t*)av[2], ft_strlen(av[2]), res);
+		printable = getstr_from_res(res);
+		ft_putstr(printable);
+		free(printable);
+	}
 	else if (ft_strcmp(av[1], "sha256") == 0)
 		return (sha256(av[2]));
 	else
